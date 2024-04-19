@@ -120,6 +120,12 @@ int main() {
   gpio_pull_up(I2C_SDA1_PIN);
   gpio_pull_up(I2C_SCL1_PIN);
 
+// setup button gpio 14
+#define BUTTON_PIN 14
+  gpio_init(BUTTON_PIN);
+  gpio_set_dir(BUTTON_PIN, GPIO_IN);
+  gpio_pull_up(BUTTON_PIN);
+
   sleep_ms(1000);
 
   printf("zeemo\n");
@@ -132,6 +138,8 @@ int main() {
 
   // endless loop
   int note_index = -1;
+
+  bool button_on = false;
 
   float periods[3] = {8232, 9021, 12123};  // milliseconds
   while (true) {
@@ -154,6 +162,12 @@ int main() {
       }
       update_voltages();
       sleep_ms(1);
+
+      // read button
+      if (1 - gpio_get(BUTTON_PIN) != button_on) {
+        button_on = !button_on;
+        printf("button %d\n", button_on);
+      }
     }
   }
   return 0;
