@@ -110,6 +110,12 @@ uint16_t random_integer(uint16_t low, uint16_t high) {
   return low + (rand() % (high - low));
 }
 
+void midi_callback(uint8_t status, uint8_t channel, uint8_t note,
+                   uint8_t velocity) {
+  printf("status %x channel %x note %x velocity %x\n", status, channel, note,
+         velocity);
+}
+
 int main() {
   stdio_init_all();
 
@@ -153,7 +159,7 @@ int main() {
 
   while (true) {
     tud_task();
-    midi_comm_task(NULL);
+    midi_comm_task(midi_callback);
 
     // set_voltage(0, midi2voltage(48));
     // sleep_ms(5000);
