@@ -23,8 +23,6 @@
  *
  */
 
-#ifdef INCLUDE_MIDI
-
 #include "tusb.h"
 
 /* A combination of interfaces must have a unique product id, since PC will save
@@ -127,13 +125,8 @@ uint8_t const* tud_descriptor_configuration_cb(uint8_t index) {
 char const* string_desc_arr[] = {
     (const char[]){0x09, 0x04},  // 0: is supported language is English (0x0409)
     "Raspberry Pi",              // 1: Manufacturer
-#ifdef INCLUDE_BOARDCORE
-    "zeptoboard",  // 2: Product
-#endif
-#ifdef INCLUDE_ZEPTOCORE
-    "zeptocore",  // 2: Product
-#endif
-    "123456",  // 3: Serials, should use chip ID
+    "zeemo",                     // 2: Product
+    "123456",                    // 3: Serials, should use chip ID
 };
 
 static uint16_t _desc_str[32];
@@ -173,5 +166,3 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
 
   return _desc_str;
 }
-
-#endif  // INCLUDE_MIDI
