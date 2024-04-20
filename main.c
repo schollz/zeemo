@@ -4,7 +4,14 @@
 
 #include "hardware/i2c.h"
 #include "hardware/irq.h"
+#include "pico/bootrom.h"
 #include "pico/stdlib.h"
+//
+#include "bsp/board.h"
+#include "tusb.h"
+//
+#include "lib/midi_comm.h"
+#include "lib/midi_out.h"
 
 // https://github.com/raspberrypi/pico-examples/blob/master/i2c/bus_scan/bus_scan.c
 bool reserved_addr(uint8_t addr) {
@@ -142,7 +149,12 @@ int main() {
   bool button_on = false;
 
   float periods[3] = {8232, 9021, 12123};  // milliseconds
+  tusb_init();
+
   while (true) {
+    tud_task();
+    midi_comm_task(NULL);
+
     // set_voltage(0, midi2voltage(48));
     // sleep_ms(5000);
     // set_voltage(0, midi2voltage(60));

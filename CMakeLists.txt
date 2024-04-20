@@ -1,31 +1,49 @@
-# Generated Cmake Pico project file
+# Set minimum required version of CMake
+cmake_minimum_required(VERSION 3.12)
 
-cmake_minimum_required(VERSION 3.13)
+# Pull in PICO SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-project(zeemo C CXX ASM)
+# We also need PICO EXTRAS
+include(pico_extras_import.cmake)
+
+
+# Set name of project (as PROJECT_NAME) and C/C++ standards
+project(_core C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-add_executable(zeemo main.c)
+add_executable(${PROJECT_NAME} 
+        main.c
+        ${CMAKE_CURRENT_LIST_DIR}/lib/usb_descriptors.c
+)
 
 
-target_link_libraries(zeemo
+# Create map/bin/hex/uf2 files
+pico_add_extra_outputs(${PROJECT_NAME})
+
+target_link_libraries(${PROJECT_NAME}
         pico_stdlib 
         hardware_i2c
         hardware_uart
+        tinyusb_device
+        tinyusb_board
 )
 
-pico_set_program_name(zeemo "zeemo")
-pico_set_program_version(zeemo "0.1")
+add_compile_definitions(USE_PRINTF)
 
-pico_enable_stdio_uart(zeemo 0)
-pico_enable_stdio_usb(zeemo 1)
+set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS "-Wl,--print-memory-usage")
+
+target_link_libraries(${PROJECT_NAME} 
+    tinyusb_device
+    tinyusb_board
+)
+pico_enable_stdio_usb(${PROJECT_NAME} 0)
+pico_enable_stdio_uart(${PROJECT_NAME} 1)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
 
-# create map/bin/hex file etc.
-pico_add_extra_outputs(zeemo)
-
+pico_add_extra_outputs(${PROJECT_NAME})
