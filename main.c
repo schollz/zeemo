@@ -10,8 +10,13 @@
 #include "bsp/board.h"
 #include "tusb.h"
 //
+#include "lib/adsr.h"
 #include "lib/midi_comm.h"
 #include "lib/midi_out.h"
+
+// globals
+
+ADSR *adsrs[2];
 
 // https://github.com/raspberrypi/pico-examples/blob/master/i2c/bus_scan/bus_scan.c
 bool reserved_addr(uint8_t addr) {
@@ -91,11 +96,18 @@ void set_voltage_(uint8_t ch, float voltage) {
   }
 }
 
+void write_voltage_reference() {
+  // page 43 http://ww1.microchip.com/downloads/en/devicedoc/22187e.pdf
+  uint8_t data = 0b10000000;
+  i2c_write_blocking(i2c0, 0x60, &data, 1, false);
+  i2c_write_blocking(i2c0, 0x61, &data, 1, false);
+}
+
 void update_voltages() {
   // page 38 http://ww1.microchip.com/downloads/en/devicedoc/22187e.pdf
   uint8_t data[8];
   for (int i = 0; i < 4; i++) {
-    uint16_t value = (uint16_t)round(voltages_set[i] * 4095.0 / 4.096);
+    uint16_t value = (uint16_t)round(voltages_set[i] * 4095.0 / 5.0);
     data[i * 2] = 0b00000000 | (value >> 8);
     data[i * 2 + 1] = value & 0xff;
   }
@@ -110,10 +122,33 @@ uint16_t random_integer(uint16_t low, uint16_t high) {
   return low + (rand() % (high - low));
 }
 
+// keep track of two midi notes
+uint8_t notes_playing[2] = {0, 0};
+
 void midi_callback(uint8_t status, uint8_t channel, uint8_t note,
                    uint8_t velocity) {
   printf("status %x channel %x note %x velocity %x\n", status, channel, note,
          velocity);
+
+  if (status == 0x90 && velocity > 0) {
+    for (int i = 0; i < 2; i++) {
+      if (notes_playing[i] == 0) {
+        notes_playing[i] = note;
+        ADSR_gate(adsrs[i], true, to_ms_since_boot(get_absolute_time()));
+        set_voltage(i, midi2cv(note));
+        update_voltages();
+        break;
+      }
+    }
+  } else if (status == 0x80 || (status == 0x90 && velocity == 0)) {
+    for (int i = 0; i < 2; i++) {
+      if (notes_playing[i] == note) {
+        ADSR_gate(adsrs[i], false, to_ms_since_boot(get_absolute_time()));
+        notes_playing[i] = 0;
+        break;
+      }
+    }
+  }
 }
 
 int main() {
@@ -141,6 +176,14 @@ int main() {
 
   sleep_ms(1000);
 
+  // update voltage reference
+  write_voltage_reference();
+
+  // initialize adsr
+  for (int i = 0; i < 2; i++) {
+    adsrs[i] = ADSR_malloc(1000, 1000, 0.5, 1000, 4);
+  }
+
   printf("zeemo\n");
 
 #define NOTES_TOTAL 16
@@ -157,36 +200,54 @@ int main() {
   float periods[3] = {8232, 9021, 12123};  // milliseconds
   tusb_init();
 
+  set_voltage(0, midi2cv(36));
+  set_voltage(1, midi2cv(36));
   while (true) {
     tud_task();
     midi_comm_task(midi_callback);
+    uint32_t current_time = to_ms_since_boot(get_absolute_time());
 
-    // set_voltage(0, midi2voltage(48));
-    // sleep_ms(5000);
-    // set_voltage(0, midi2voltage(60));
-    // sleep_ms(5000);
-    note_index++;
-    uint8_t note = notes[note_index % NOTES_TOTAL];
-    float voltage = midi2cv(note);
-    set_voltage(0, voltage);
-    uint16_t wait_time = random_integer(250, 2520);
-    for (uint16_t j = 0; j < wait_time; j++) {
-      uint32_t current_time = to_ms_since_boot(get_absolute_time());
-      for (int i = 0; i < 3; i++) {
-        float val =
-            (sin(2 * 3.14159 * (float)current_time / (float)periods[i]) + 1) *
-            2.048;
-        set_voltage(i + 1, val);
-      }
-      update_voltages();
-      sleep_ms(1);
-
-      // read button
-      if (1 - gpio_get(BUTTON_PIN) != button_on) {
-        button_on = !button_on;
-        printf("button %d\n", button_on);
+    for (uint8_t i = 0; i < 2; i++) {
+      ADSR_process(adsrs[i], current_time);
+      set_voltage(i + 2, adsrs[i]->level * 4.096);
+      if (i == 0) {
+        printf("adsr %d %d %f\n", i, adsrs[i]->state, adsrs[i]->level);
       }
     }
+    // set_voltage(0, midi2cv(36));
+    // set_voltage(1, midi2cv(36));
+    // set_voltage(2, midi2cv(36));
+    // set_voltage(3, midi2cv(36));
+    update_voltages();
+
+    // // set_voltage(0, midi2voltage(48));
+    // // sleep_ms(5000);
+    // // set_voltage(0, midi2voltage(60));
+    // // sleep_ms(5000);
+    // note_index++;
+    // uint8_t note = notes[note_index % NOTES_TOTAL];
+    // float voltage = midi2cv(note);
+    // set_voltage(0, voltage);
+    // uint16_t wait_time = random_integer(250, 2520);
+    // for (uint16_t j = 0; j < wait_time; j++) {
+    //   uint32_t current_time = to_ms_since_boot(get_absolute_time());
+    //   for (int i = 0; i < 3; i++) {
+    //     float val =
+    //         (sin(2 * 3.14159 * (float)current_time / (float)periods[i]) +
+    //         1)
+    //         * 2.048;
+    //     set_voltage(i + 1, val);
+    //   }
+    //   update_voltages();
+    //   sleep_ms(1);
+
+    // read button
+    if (1 - gpio_get(BUTTON_PIN) != button_on) {
+      button_on = !button_on;
+      printf("button %d\n", button_on);
+    }
+    // }
+    sleep_ms(2);
   }
   return 0;
 }
