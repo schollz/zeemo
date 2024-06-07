@@ -26,6 +26,7 @@ add_executable(${PROJECT_NAME}
 pico_add_extra_outputs(${PROJECT_NAME})
 
 pico_generate_pio_header(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/lib/WS2812.pio)
+pico_generate_pio_header(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/lib/buttonmatrix3.pio)
 
 target_link_libraries(${PROJECT_NAME}
         pico_stdlib 

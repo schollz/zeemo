@@ -14,19 +14,10 @@
 #include "lib/adsr.h"
 #include "lib/dac.h"
 
-// definitions
-#define I2C_SDA0_PIN 20
-#define I2C_SCL0_PIN 21
-#define I2C_SDA1_PIN 14
-#define I2C_SCL1_PIN 15
-#define WS2812_PIN 11
-#define WS2812_SM 2
-#define WS2812_NUM_LEDS 8
-#define BTN_ONBOARD 23
-
-// globals
-WS2812 *ws2812;
-DAC *dac;
+// zeemo imports (order matters!)
+#include "lib/globals.h"
+//
+#include "lib/button_handler.h"
 
 int main() {
   stdio_init_all();
@@ -62,6 +53,9 @@ int main() {
   // setup DAC
   dac = DAC_malloc();
 
+  // setup button handler
+  button_handler_init();
+
   bool button_on = false;
   uint16_t debounce_startup = 1000;
   while (true) {
@@ -83,7 +77,9 @@ int main() {
       printf("[main] button %d\n", button_on);
     }
 
-    sleep_ms(1);
+    button_handler();
+
+    sleep_us(100);
   }
   return 0;
 }
