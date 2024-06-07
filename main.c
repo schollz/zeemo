@@ -44,9 +44,9 @@ int main() {
 
   // setup WS2812
   ws2812 = WS2812_new(WS2812_PIN, pio0, WS2812_SM, WS2812_NUM_LEDS);
-  WS2812_set_brightness(ws2812, 30);
+  WS2812_set_brightness(ws2812, 50);
   for (int i = 0; i < WS2812_NUM_LEDS; i++) {
-    WS2812_fill(ws2812, i, 100, 20, 13);
+    WS2812_fill(ws2812, i, 150, 0, 255);
   }
   WS2812_show(ws2812);
 
