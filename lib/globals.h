@@ -17,7 +17,9 @@
 #define LED_2_GPIO 19
 #define LED_3_GPIO 29
 #define LED_4_GPIO 24
+#define LED_TOP_GPIO 25
 
 // globals
 WS2812 *ws2812;
 DAC *dac;
+Zeemo *zeemo;

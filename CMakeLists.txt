@@ -30,6 +30,8 @@ pico_generate_pio_header(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/lib/buttonmat
 
 target_link_libraries(${PROJECT_NAME}
         pico_stdlib 
+        hardware_clocks
+        hardware_adc
         hardware_i2c
         hardware_pio
         hardware_uart
