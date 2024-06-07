@@ -65,21 +65,24 @@ int main() {
   bool button_on = false;
   uint16_t debounce_startup = 1000;
   while (true) {
-    // read button
-    if (gpio_get(BTN_ONBOARD) != button_on) {
-      button_on = !button_on;
-      printf("[main] button %d\n", button_on);
-    }
-
+    // don't do anything before the startup
     if (debounce_startup > 0) {
       debounce_startup--;
       if (debounce_startup == 0) {
-        DAC_set_voltage(dac, 1, 1.23);
-        DAC_update(dac);
         DAC_set_voltage_update(dac, 0, 0.5);
         printf("[main] startup complete\n");
       }
+      sleep_ms(1);
+      continue;
     }
+
+    // read button
+    if (gpio_get(BTN_ONBOARD) != button_on) {
+      button_on = !button_on;
+      DAC_set_voltage_update(dac, 0, dac->voltages[0] + 0.1);
+      printf("[main] button %d\n", button_on);
+    }
+
     sleep_ms(1);
   }
   return 0;
