@@ -18,6 +18,9 @@
 #include "lib/globals.h"
 //
 #include "lib/button_handler.h"
+#include "lib/leds2.h"
+//
+#include "lib/screen.h"
 
 int main() {
   stdio_init_all();
@@ -56,6 +59,9 @@ int main() {
   // setup button handler
   button_handler_init();
 
+  // setup LEDs screen
+  screen_init();
+
   bool button_on = false;
   uint16_t debounce_startup = 1000;
   while (true) {
@@ -78,6 +84,8 @@ int main() {
     }
 
     button_handler();
+
+    screen_update();
 
     sleep_us(100);
   }
