@@ -1,38 +1,31 @@
+// stdlib
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+// pico stdlib
 #include "hardware/i2c.h"
 #include "hardware/irq.h"
 #include "hardware/pio.h"
 #include "pico/bootrom.h"
 #include "pico/stdlib.h"
-//
-// #include "bsp/board.h"
-// #include "tusb.h"
-//
+// zeemo lib
 #include "lib/WS2812.h"
 #include "lib/adsr.h"
 #include "lib/dac.h"
-// #include "lib/midi_comm.h"
-// #include "lib/midi_out.h"
 
 // definitions
 #define I2C_SDA0_PIN 20
 #define I2C_SCL0_PIN 21
 #define I2C_SDA1_PIN 14
 #define I2C_SCL1_PIN 15
-
 #define WS2812_PIN 11
 #define WS2812_SM 2
 #define WS2812_NUM_LEDS 8
-
 #define BTN_ONBOARD 23
 
 // globals
 WS2812 *ws2812;
-ADSR *adsrs[2];
 DAC *dac;
 
 int main() {
