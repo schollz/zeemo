@@ -100,5 +100,5 @@ void midi_comm_task(midi_comm_callback callback) {
   }
 }
 
-#define printf printf_sysex
+// #define printf printf_sysex
 #endif

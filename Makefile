@@ -16,6 +16,7 @@ clean:
 
 resetpico2:
 	-amidi -p $$(amidi -l | grep 'zeptocore\|zeptoboard\|ectocore\|zeemo' | awk '{print $$2}') -S "B00000"
+	-curl localhost:7083 > /dev/null
 
 
 pico-extras:
@@ -29,3 +30,7 @@ ignore:
 midicom:
 	cd dev/midicom && go build -v
 	./dev/midicom/midicom
+
+minicom:
+	cd dev/minicom && go build -v
+	./dev/minicom/minicom
