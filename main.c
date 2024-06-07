@@ -168,8 +168,7 @@ int main() {
   gpio_pull_up(I2C_SDA1_PIN);
   gpio_pull_up(I2C_SCL1_PIN);
 
-// setup button gpio 14
-#define BUTTON_PIN 14
+#define BUTTON_PIN 23
   gpio_init(BUTTON_PIN);
   gpio_set_dir(BUTTON_PIN, GPIO_IN);
   gpio_pull_up(BUTTON_PIN);
@@ -205,44 +204,11 @@ int main() {
   while (true) {
     tud_task();
     midi_comm_task(midi_callback);
-    uint32_t current_time = to_ms_since_boot(get_absolute_time());
 
-    for (uint8_t i = 0; i < 2; i++) {
-      ADSR_process(adsrs[i], current_time);
-      set_voltage(i + 2, adsrs[i]->level * 4.096);
-      if (i == 0) {
-        printf("adsr %d %d %f\n", i, adsrs[i]->state, adsrs[i]->level);
-      }
-    }
-    // set_voltage(0, midi2cv(36));
-    // set_voltage(1, midi2cv(36));
-    // set_voltage(2, midi2cv(36));
-    // set_voltage(3, midi2cv(36));
     update_voltages();
 
-    // // set_voltage(0, midi2voltage(48));
-    // // sleep_ms(5000);
-    // // set_voltage(0, midi2voltage(60));
-    // // sleep_ms(5000);
-    // note_index++;
-    // uint8_t note = notes[note_index % NOTES_TOTAL];
-    // float voltage = midi2cv(note);
-    // set_voltage(0, voltage);
-    // uint16_t wait_time = random_integer(250, 2520);
-    // for (uint16_t j = 0; j < wait_time; j++) {
-    //   uint32_t current_time = to_ms_since_boot(get_absolute_time());
-    //   for (int i = 0; i < 3; i++) {
-    //     float val =
-    //         (sin(2 * 3.14159 * (float)current_time / (float)periods[i]) +
-    //         1)
-    //         * 2.048;
-    //     set_voltage(i + 1, val);
-    //   }
-    //   update_voltages();
-    //   sleep_ms(1);
-
     // read button
-    if (1 - gpio_get(BUTTON_PIN) != button_on) {
+    if (gpio_get(BUTTON_PIN) != button_on) {
       button_on = !button_on;
       printf("button %d\n", button_on);
     }
