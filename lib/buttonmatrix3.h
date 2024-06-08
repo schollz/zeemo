@@ -36,8 +36,10 @@ typedef struct ButtonMatrix {
   uint8_t mapping[BUTTONMATRIX_BUTTONS_MAX];
   uint32_t button_time[BUTTONMATRIX_BUTTONS_MAX];
   bool button_hold_emit[BUTTONMATRIX_BUTTONS_MAX];
+  bool button_hold_long_emit[BUTTONMATRIX_BUTTONS_MAX];
   callback_fn_uint8_t fn_button_on;
   callback_fn_uint8_t fn_button_held;
+  callback_fn_uint8_t fn_button_held_long;
   callback_fn_uint8_t_uint32_t fn_button_off;
 } ButtonMatrix;
 
@@ -58,6 +60,7 @@ void ButtonMatrix_dec_to_binary(ButtonMatrix *bm, uint32_t num) {
 ButtonMatrix *ButtonMatrix_create(uint base_input, uint base_output,
                                   callback_fn_uint8_t fn_button_on,
                                   callback_fn_uint8_t fn_button_held,
+                                  callback_fn_uint8_t fn_button_held_long,
                                   callback_fn_uint8_t_uint32_t fn_button_off) {
   ButtonMatrix *bm = (ButtonMatrix *)malloc(sizeof(ButtonMatrix));
   bm->pio = pio0;
@@ -66,6 +69,7 @@ ButtonMatrix *ButtonMatrix_create(uint base_input, uint base_output,
   bm->fn_button_on = fn_button_on;
   bm->fn_button_off = fn_button_off;
   bm->fn_button_held = fn_button_held;
+  bm->fn_button_held_long = fn_button_held_long;
 
   for (int i = 0; i < BUTTONMATRIX_ROWS; i++) {
     pio_gpio_init(bm->pio, base_input + i);
@@ -100,6 +104,7 @@ ButtonMatrix *ButtonMatrix_create(uint base_input, uint base_output,
   for (uint8_t i = 0; i < BUTTONMATRIX_BUTTONS_MAX; i++) {
     bm->button_time[i] = 0;
     bm->button_hold_emit[i] = false;
+    bm->button_hold_long_emit[i] = false;
   }
 
   uint offset = pio_add_program(bm->pio, &button_matrix_program);
@@ -138,6 +143,12 @@ void ButtonMatrix_read(ButtonMatrix *bm) {
             bm->fn_button_held(j);
           }
           bm->button_hold_emit[j] = true;
+        } else if (now - bm->button_time[j] > DURATION_HOLD * 2 &&
+                   !bm->button_hold_long_emit[j]) {
+          if (bm->fn_button_held_long != NULL) {
+            bm->fn_button_held_long(j);
+          }
+          bm->button_hold_long_emit[j] = true;
         }
       }
     }
@@ -161,6 +172,7 @@ void ButtonMatrix_read(ButtonMatrix *bm) {
       }
       bm->button_time[j] = 0;
       bm->button_hold_emit[j] = false;
+      bm->button_hold_long_emit[j] = false;
     }
   }
 

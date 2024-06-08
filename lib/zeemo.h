@@ -25,6 +25,7 @@ typedef struct Zeemo {
   uint8_t subview;
   Sequence seq[5][4];
   int16_t bpm;
+  bool recording;
 } Zeemo;
 
 Zeemo *Zeemo_malloc() {
@@ -35,5 +36,18 @@ Zeemo *Zeemo_malloc() {
 }
 
 void Zeemo_free(Zeemo *self) { free(self); }
+
+void Zeemo_change_view(Zeemo *self, enum View view) {
+  self->view = view;
+  self->subview = 0;
+  self->recording = false;
+}
+
+void Zeemo_change_subview(Zeemo *self, uint8_t subview) {
+  self->subview = subview;
+  self->recording = false;
+}
+
+void Zeemo_start_recording(Zeemo *self) { self->recording = true; }
 
 #endif

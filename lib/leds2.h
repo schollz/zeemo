@@ -164,9 +164,9 @@ void LEDS_render(LEDS *leds) {
     // blink GPIO leds
     if (leds->gpio_leds_state[j] == LED_BLINK) {
       leds->gpio_leds_count[j]++;
-      if (leds->gpio_leds_count[j] == 700) {
+      if (leds->gpio_leds_count[j] == 70) {
         gpio_put(leds->gpio_leds_pin[j], 1);
-      } else if (leds->gpio_leds_count[j] >= 1400) {
+      } else if (leds->gpio_leds_count[j] >= 130) {
         gpio_put(leds->gpio_leds_pin[j], 0);
         leds->gpio_leds_count[j] = 0;
       }

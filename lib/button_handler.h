@@ -36,23 +36,31 @@ bool btn_onboard_value = 0;
 void button_held_fn(uint8_t key) {
   printf("[bh] held %d\n", key);
   if (key < 4) {
-    zeemo->subview = key;
+    Zeemo_change_subview(zeemo, key);
   }
 }
+
+void button_held_long_fn(uint8_t key) {
+  printf("[bh] held long %d\n", key);
+  if (key < 4) {
+    Zeemo_start_recording(zeemo);
+  }
+}
+
 void button_on_fn(uint8_t key) { printf("[bh] key %d down\n", key); }
 
 void button_off_fn(uint8_t key, uint32_t held_time) {
   printf("[bh] key %d up, held %ld\n", key, held_time);
   if (held_time < DURATION_HOLD) {
     if (key < 4) {
-      zeemo->view = key + 2;
+      Zeemo_change_view(zeemo, VIEW_VOICE_1 + key);
     }
   }
 }
 
 void button_handler_init() {
   bm = ButtonMatrix_create(BTN_ROW_START, BTN_COL_START, button_on_fn,
-                           button_held_fn, button_off_fn);
+                           button_held_fn, button_held_long_fn, button_off_fn);
 }
 
 void button_handler() {

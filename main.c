@@ -49,7 +49,7 @@ bool repeating_timer_callback(struct repeating_timer *t) {
 int main() {
   stdio_init_all();
 
-  sleep_ms(1000);
+  sleep_ms(100);
 
   // This example will use i2c0 on the default SDA and SCL (pins 6, 7 on a Pico)
   i2c_init(i2c0, 50 * 1000);
@@ -70,7 +70,7 @@ int main() {
   gpio_init(LED_TOP_GPIO);
   gpio_set_dir(LED_TOP_GPIO, GPIO_OUT);
 
-  sleep_ms(1000);
+  sleep_ms(10);
 
   // setup WS2812
   ws2812 = WS2812_new(WS2812_PIN, pio0, WS2812_SM, WS2812_NUM_LEDS);
@@ -100,7 +100,7 @@ int main() {
   add_repeating_timer_us(-(round(30000000 / zeemo->bpm / 96)),
                          repeating_timer_callback, NULL, &timer);
 
-  uint16_t debounce_startup = 1000;
+  uint16_t debounce_startup = 100;
   while (true) {
     // don't do anything before the startup
     if (debounce_startup > 0) {

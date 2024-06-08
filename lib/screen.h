@@ -12,7 +12,11 @@ void screen_init() {
 void screen_update() {
   for (uint8_t i = 0; i < 4; i++) {
     if (i == zeemo->subview) {
-      LEDS_set(leds, i, LED_BRIGHT);
+      if (zeemo->recording) {
+        LEDS_set(leds, i, LED_BLINK);
+      } else {
+        LEDS_set(leds, i, LED_BRIGHT);
+      }
     } else {
       LEDS_set(leds, i, LED_NONE);
     }
