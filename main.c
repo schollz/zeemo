@@ -16,6 +16,7 @@
 #include "lib/WS2812.h"
 #include "lib/adsr.h"
 #include "lib/dac.h"
+#include "lib/filterexp.h"
 #include "lib/knob_change.h"
 // zeemo imports (order matters!)
 #include "lib/globals.h"
@@ -102,8 +103,10 @@ int main() {
   adc_gpio_init(27);
   adc_gpio_init(28);
   KnobChange *knob_change[3];
+  FilterExp *filter_exp[3];
   for (uint8_t i = 0; i < 3; i++) {
     knob_change[i] = KnobChange_malloc(100);
+    filter_exp[i] = FilterExp_create(10);
   }
 
   // setup timer
@@ -131,7 +134,23 @@ int main() {
       uint16_t adc_raw = adc_read();
       int16_t adc = KnobChange_update(knob_change[knob], adc_raw);
       if (adc > 0) {
+        adc = FilterExp_update(filter_exp[knob], adc);
         printf("[main] knob %d: %d\n", knob, adc);
+        switch (zeemo->view) {
+          case VIEW_MAIN:
+            switch (knob) {
+              case 0:
+                break;
+              case 1:
+                zeemo->bpm = adc * 240 / 4095 + 60;
+                break;
+              case 2:
+                break;
+            }
+            break;
+          default:
+            break;
+        }
       }
     }
 
