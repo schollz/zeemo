@@ -100,7 +100,6 @@ int main() {
   add_repeating_timer_us(-(round(30000000 / zeemo->bpm / 96)),
                          repeating_timer_callback, NULL, &timer);
 
-  bool button_on = false;
   uint16_t debounce_startup = 1000;
   while (true) {
     // don't do anything before the startup
@@ -112,13 +111,6 @@ int main() {
       }
       sleep_ms(1);
       continue;
-    }
-
-    // read button
-    if (gpio_get(BTN_ONBOARD) != button_on) {
-      button_on = !button_on;
-      DAC_set_voltage_update(dac, 0, dac->voltages[0] + 0.1);
-      printf("[main] button %d\n", button_on);
     }
 
     button_handler();

@@ -37,6 +37,7 @@ uint8_t key_held_num = 0;
 bool key_held_on = false;
 int32_t key_timer = 0;
 int32_t key_timer_on = 0;
+uint32_t key_timer_first = 0;
 uint8_t key_pressed[100];
 uint8_t key_pressed_num = 0;
 uint8_t key_total_pressed = 0;
@@ -77,11 +78,49 @@ void button_key_on_double(uint8_t key1, uint8_t key2) {
   printf("[bh] on double %d+%d\n", key1, key2);
 }
 
+bool btn_onboard_value = false;
+
 void button_handler() {
+  // read button
+
+  bool btn_onboard = gpio_get(BTN_ONBOARD);
+  if (btn_onboard != btn_onboard_value) {
+    btn_onboard_value = btn_onboard;
+    printf("[bh] onboard %d\n", btn_onboard);
+    if (btn_onboard_value == 1) {
+      if (zeemo->view != VIEW_CHORD) {
+        zeemo->view = VIEW_CHORD;
+      } else {
+        zeemo->view = VIEW_MAIN;
+      }
+      printf("view: %d\n", zeemo->view);
+    }
+  }
+
   if (key_total_pressed == 0) {
     key_timer++;
+    if (key_timer_first > 0) {
+      uint32_t duration =
+          to_ms_since_boot(get_absolute_time()) - key_timer_first;
+      if (duration > 500) {
+        if (key_pressed_num == 1) {
+          printf("[bh] hold %d\n", key_pressed[0]);
+          if (key_pressed[0] < 4) {
+            zeemo->subview = key_pressed[0];
+          }
+        }
+      } else {
+        if (key_pressed_num == 1) {
+          printf("[btc] tap %d\n", key_pressed[0]);
+          if (key_pressed[0] < 4) {
+            zeemo->view = key_pressed[0] + 2;
+          }
+        }
+      }
+      key_timer_first = 0;
+    }
   }
-  if (key_timer == 300 && key_pressed_num > 0) {
+  if (key_timer == 5 && key_pressed_num > 0) {
     // create string
     char key_pressed_str[256];
     int pos = snprintf(key_pressed_str, sizeof(key_pressed_str),
@@ -189,5 +228,8 @@ void button_handler() {
 
   if (key_total_pressed > 0) {
     key_timer_on++;
+    if (key_timer_first == 0) {
+      key_timer_first = to_ms_since_boot(get_absolute_time());
+    }
   }
 }

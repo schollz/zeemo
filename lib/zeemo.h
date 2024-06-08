@@ -10,8 +10,18 @@
 // 6 views total (main, chord, voice 1, voice 2, voice 3, voice 4)
 // 5 views have sequencers (chord, voice 1, voice 2, voice 3, voice 4)
 // 4 subviews per view, each with a sequencer
+
+enum View {
+  VIEW_MAIN,
+  VIEW_CHORD,
+  VIEW_VOICE_1,
+  VIEW_VOICE_2,
+  VIEW_VOICE_3,
+  VIEW_VOICE_4,
+};
+
 typedef struct Zeemo {
-  uint8_t view;
+  enum View view;
   uint8_t subview;
   Sequence seq[5][4];
   int16_t bpm;
@@ -20,6 +30,7 @@ typedef struct Zeemo {
 Zeemo *Zeemo_malloc() {
   Zeemo *self = (Zeemo *)malloc(sizeof(Zeemo));
   self->bpm = 60;
+  self->view = VIEW_MAIN;
   return self;
 }
 
