@@ -43,7 +43,13 @@ void button_held_fn(uint8_t key) {
 void button_held_long_fn(uint8_t key) {
   printf("[bh] held long %d\n", key);
   if (key < 4) {
-    Zeemo_start_recording(zeemo);
+    if (zeemo->view >= VIEW_CHORD) {
+      Zeemo_start_recording(zeemo);
+    } else if (zeemo->view == VIEW_MAIN) {
+      if (key == 3) {
+        Zeemo_toggle_tuning_mode(zeemo);
+      }
+    }
   }
 }
 

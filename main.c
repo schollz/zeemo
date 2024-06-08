@@ -15,9 +15,11 @@
 #include "lib/WS2812.h"
 #include "lib/adsr.h"
 #include "lib/dac.h"
-#include "lib/zeemo.h"
 // zeemo imports (order matters!)
 #include "lib/globals.h"
+//
+#include "lib/zeemo.h"
+Zeemo *zeemo;
 //
 #include "lib/button_handler.h"
 #include "lib/leds2.h"
@@ -106,12 +108,13 @@ int main() {
     if (debounce_startup > 0) {
       debounce_startup--;
       if (debounce_startup == 0) {
-        DAC_set_voltage_update(dac, 0, 0.5);
         printf("[main] startup complete\n");
       }
       sleep_ms(1);
       continue;
     }
+
+    Zeemo_update(zeemo);
 
     button_handler();
 

@@ -143,7 +143,7 @@ void ButtonMatrix_read(ButtonMatrix *bm) {
             bm->fn_button_held(j);
           }
           bm->button_hold_emit[j] = true;
-        } else if (now - bm->button_time[j] > DURATION_HOLD * 2 &&
+        } else if (now - bm->button_time[j] > DURATION_HOLD_LONG &&
                    !bm->button_hold_long_emit[j]) {
           if (bm->fn_button_held_long != NULL) {
             bm->fn_button_held_long(j);

@@ -19,11 +19,11 @@
 #define LED_4_GPIO 24
 #define LED_TOP_GPIO 25
 #define DURATION_HOLD 500
+#define DURATION_HOLD_LONG 1250
 
 // globals
 WS2812 *ws2812;
 DAC *dac;
-Zeemo *zeemo;
 
 // utilities
 typedef void (*callback_fn_uint8_t_uint32_t)(uint8_t, uint32_t);

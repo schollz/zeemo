@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "dac.h"
 #include "sequence.h"
 
 // 6 views total (main, chord, voice 1, voice 2, voice 3, voice 4)
@@ -26,6 +27,7 @@ typedef struct Zeemo {
   Sequence seq[5][4];
   int16_t bpm;
   bool recording;
+  bool mode_tuning;
 } Zeemo;
 
 Zeemo *Zeemo_malloc() {
@@ -48,6 +50,28 @@ void Zeemo_change_subview(Zeemo *self, uint8_t subview) {
   self->recording = false;
 }
 
-void Zeemo_start_recording(Zeemo *self) { self->recording = true; }
+void Zeemo_start_recording(Zeemo *self) {
+  self->recording = true;
+  printf("[zeemo] recording %d\n", self->recording);
+}
+
+void Zeemo_toggle_tuning_mode(Zeemo *self) {
+  self->mode_tuning = !self->mode_tuning;
+  self->recording = false;
+  printf("[zeemo] tuning mode %d\n", self->mode_tuning);
+}
+
+void Zeemo_update(Zeemo *self) {
+  if (self->mode_tuning) {
+    for (uint8_t ch = 0; ch < 4; ch++) {
+      // set to 2 volts
+      DAC_set_voltage(dac, (ch * 2), 2);
+      // set to high (4 volts)
+      DAC_set_voltage(dac, (ch * 2) + 1, 4);
+    }
+    DAC_update(dac);
+    return;
+  }
+}
 
 #endif
