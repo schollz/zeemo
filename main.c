@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 // pico stdlib
+#include "hardware/adc.h"
 #include "hardware/clocks.h"
 #include "hardware/i2c.h"
 #include "hardware/irq.h"
@@ -15,6 +16,7 @@
 #include "lib/WS2812.h"
 #include "lib/adsr.h"
 #include "lib/dac.h"
+#include "lib/knob_change.h"
 // zeemo imports (order matters!)
 #include "lib/globals.h"
 //
@@ -94,6 +96,16 @@ int main() {
   // setup zeemo
   zeemo = Zeemo_malloc();
 
+  // setup adcs
+  adc_init();
+  adc_gpio_init(26);
+  adc_gpio_init(27);
+  adc_gpio_init(28);
+  KnobChange *knob_change[3];
+  for (uint8_t i = 0; i < 3; i++) {
+    knob_change[i] = KnobChange_malloc(100);
+  }
+
   // setup timer
   // Negative delay so means we will call repeating_timer_callback, and call
   // it again 500ms later regardless of how long the callback took to execute
@@ -112,6 +124,15 @@ int main() {
       }
       sleep_ms(1);
       continue;
+    }
+
+    for (uint8_t knob = 0; knob < 3; knob++) {
+      adc_select_input(knob);
+      uint16_t adc_raw = adc_read();
+      int16_t adc = KnobChange_update(knob_change[knob], adc_raw);
+      if (adc > 0) {
+        printf("[main] knob %d: %d\n", knob, adc);
+      }
     }
 
     Zeemo_update(zeemo);
