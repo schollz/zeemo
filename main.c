@@ -39,7 +39,7 @@ bool repeating_timer_callback(struct repeating_timer *t) {
 
   bpm_timer_counter++;
   if (bpm_timer_counter % 96 == 0) {
-    printf("[rtc] 96th note: %lld\n", bpm_timer_counter);
+    // printf("[rtc] 96th note: %lld\n", bpm_timer_counter);
     down_beat = !down_beat;
     gpio_put(LED_TOP_GPIO, down_beat);
   }

@@ -34,13 +34,11 @@ typedef struct ButtonMatrix {
   uint sm;
   uint32_t last_value;
   uint8_t mapping[BUTTONMATRIX_BUTTONS_MAX];
-  bool button_on_last[BUTTONMATRIX_BUTTONS_MAX];
-  bool button_on[BUTTONMATRIX_BUTTONS_MAX];
-  int8_t on_num;
-  uint8_t on[BUTTONMATRIX_BUTTONS_MAX];  // list of buttons that turned n
-  int8_t off_num;
-  uint8_t off[BUTTONMATRIX_BUTTONS_MAX];  // list of buttons that turned off
-  uint32_t held_time[BUTTONMATRIX_BUTTONS_MAX];
+  uint32_t button_time[BUTTONMATRIX_BUTTONS_MAX];
+  bool button_hold_emit[BUTTONMATRIX_BUTTONS_MAX];
+  callback_fn_uint8_t fn_button_on;
+  callback_fn_uint8_t fn_button_held;
+  callback_fn_uint8_t_uint32_t fn_button_off;
 } ButtonMatrix;
 
 void ButtonMatrix_dec_to_binary(ButtonMatrix *bm, uint32_t num) {
@@ -57,21 +55,17 @@ void ButtonMatrix_dec_to_binary(ButtonMatrix *bm, uint32_t num) {
   printf("\n");
 }
 
-void ButtonMatrix_print_buttons(ButtonMatrix *bm) {
-  for (uint8_t i = 0; i < BUTTONMATRIX_BUTTONS_MAX; i++) {
-    printf("%d) %d\n", i, bm->button_on[i]);
-  }
-  printf("\n");
-  return;
-}
-
-ButtonMatrix *ButtonMatrix_create(uint base_input, uint base_output) {
+ButtonMatrix *ButtonMatrix_create(uint base_input, uint base_output,
+                                  callback_fn_uint8_t fn_button_on,
+                                  callback_fn_uint8_t fn_button_held,
+                                  callback_fn_uint8_t_uint32_t fn_button_off) {
   ButtonMatrix *bm = (ButtonMatrix *)malloc(sizeof(ButtonMatrix));
   bm->pio = pio0;
   bm->sm = 1;
   bm->last_value = 0;
-  bm->on_num = -1;
-  bm->off_num = -1;
+  bm->fn_button_on = fn_button_on;
+  bm->fn_button_off = fn_button_off;
+  bm->fn_button_held = fn_button_held;
 
   for (int i = 0; i < BUTTONMATRIX_ROWS; i++) {
     pio_gpio_init(bm->pio, base_input + i);
@@ -104,9 +98,8 @@ ButtonMatrix *ButtonMatrix_create(uint base_input, uint base_output) {
   bm->mapping[19] = 16;
 
   for (uint8_t i = 0; i < BUTTONMATRIX_BUTTONS_MAX; i++) {
-    bm->button_on[i] = false;  // -1 == off
-    bm->button_on_last[i] = false;
-    bm->held_time[i] = 0;
+    bm->button_time[i] = 0;
+    bm->button_hold_emit[i] = false;
   }
 
   uint offset = pio_add_program(bm->pio, &button_matrix_program);
@@ -123,9 +116,6 @@ ButtonMatrix *ButtonMatrix_create(uint base_input, uint base_output) {
 }
 
 void ButtonMatrix_read(ButtonMatrix *bm) {
-  bm->on_num = -1;
-  bm->off_num = -1;
-
   // read new value;
   uint32_t value = 0;
   pio_sm_clear_fifos(bm->pio, bm->sm);
@@ -137,31 +127,42 @@ void ButtonMatrix_read(ButtonMatrix *bm) {
   value = pio_sm_get(bm->pio, bm->sm);
 
   if (value == bm->last_value) {
+    // check for holdings
+    uint32_t now = to_ms_since_boot(get_absolute_time());
+    for (uint8_t i = 0; i < BUTTONMATRIX_BUTTONS_MAX; i++) {
+      uint8_t j = bm->mapping[i];
+      if ((value >> i) & 1) {
+        if (now - bm->button_time[j] > DURATION_HOLD &&
+            !bm->button_hold_emit[j]) {
+          if (bm->fn_button_held != NULL) {
+            bm->fn_button_held(j);
+          }
+          bm->button_hold_emit[j] = true;
+        }
+      }
+    }
     return;
   }
   for (uint8_t i = 0; i < BUTTONMATRIX_BUTTONS_MAX; i++) {
     uint8_t j = bm->mapping[i];
     if ((value >> i) & 1) {
-      // button turned off to on
-      if (!bm->button_on[j]) {
-        bm->button_on[j] = true;
-        bm->on_num++;
-        bm->on[bm->on_num] = j;
-        // printf("[%d] on: %d\n", bm->on_num, j);
+      if (bm->button_time[j] == 0) {
+        // button turned off to on
+        bm->button_time[j] = to_ms_since_boot(get_absolute_time());
+        if (bm->fn_button_on != NULL) {
+          bm->fn_button_on(j);
+        }
       }
-    } else if (bm->button_on[j]) {
+    } else if (bm->button_time[j] > 0) {
       // button turned on to off
-      bm->button_on[j] = false;
-      bm->off_num++;
-      bm->off[bm->off_num] = j;
-      // printf("[%d] off: %d\n", bm->off_num, j);
+      if (bm->fn_button_off != NULL) {
+        bm->fn_button_off(
+            j, to_ms_since_boot(get_absolute_time()) - bm->button_time[j]);
+      }
+      bm->button_time[j] = 0;
+      bm->button_hold_emit[j] = false;
     }
   }
-  if (bm->on_num > -1) {
-    bm->on_num++;
-  }
-  if (bm->off_num > -1) {
-    bm->off_num++;
-  }
+
   bm->last_value = value;
 }
