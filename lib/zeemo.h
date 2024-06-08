@@ -5,45 +5,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define SEQUENCE_NO_EMIT -120
+#include "sequence.h"
 
-typedef struct Sequence {
-  int8_t vals[128];
-  uint16_t ticks[128];
-  uint16_t total_ticks;
-  uint8_t len;
-} Sequence;
-
-void Sequence_init(Sequence *self) {
-  self->total_ticks = 0;
-  self->len = 0;
-}
-
-void Sequence_add(Sequence *self, int8_t val, uint16_t ticks) {
-  self->vals[self->len] = val;
-  self->ticks[self->len] = ticks;
-  self->total_ticks += ticks;
-  self->len++;
-}
-
-void Sequence_print(Sequence *self) {
-  for (uint8_t i = 0; i < self->len; i++) {
-    printf("%d %d\n", self->vals[i], self->ticks[i]);
-  }
-}
-
-int8_t Sequence_emit(Sequence *self, uint32_t tick) {
-  tick = tick % self->total_ticks;
-  uint32_t t = 0;
-  for (uint8_t i = 0; i < self->len; i++) {
-    if (tick == t) {
-      return self->vals[i];
-    }
-    t += self->ticks[i];
-  }
-  return SEQUENCE_NO_EMIT;
-}
+// 6 views total (main, chord, voice 1, voice 2, voice 3, voice 4)
+// 5 views have sequencers (chord, voice 1, voice 2, voice 3, voice 4)
+// 4 subviews per view, each with a sequencer
 typedef struct Zeemo {
+  uint8_t view;
+  uint8_t subview;
+  Sequence seq[5][4];
   int16_t bpm;
 } Zeemo;
 

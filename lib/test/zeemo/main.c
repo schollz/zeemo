@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "../../music.h"
 #include "../../zeemo.h"
 
 int main() {
