@@ -45,6 +45,14 @@ int8_t SimpleSequence_leds(SimpleSequence *self) {
   return val;
 }
 
+uint32_t SimpleSequence_sum(SimpleSequence *self) {
+  uint32_t sum = 0;
+  for (uint8_t i = 0; i < self->len; i++) {
+    sum += self->vals[i];
+  }
+  return sum;
+}
+
 void SimpleSequence_clear(SimpleSequence *self) {
   self->i = 0;
   self->len = 0;
@@ -65,6 +73,18 @@ int8_t SimpleSequence_next(SimpleSequence *self) {
     self->i = 0;
   }
   return v;
+}
+
+int8_t SimpleSequence_find_cumulative(SimpleSequence *self, uint32_t val) {
+  // finds the index of the cumulative sum that equals val
+  uint32_t sum = 0;
+  for (uint8_t i = 0; i < self->len; i++) {
+    if (sum == val) {
+      return i;
+    }
+    sum += self->vals[i];
+  }
+  return -1;
 }
 
 #endif

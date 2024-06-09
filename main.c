@@ -19,6 +19,8 @@ bool repeating_timer_callback(struct repeating_timer *t) {
     down_beat = !down_beat;
     gpio_put(LED_TOP_GPIO, down_beat);
   }
+
+  Zeemo_tick(&zeemo, bpm_timer_counter);
   return true;
 }
 

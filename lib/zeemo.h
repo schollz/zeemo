@@ -22,6 +22,18 @@ enum View {
   VIEW_VOICE_4,
 };
 
+enum VoiceSel {
+  NOTE_VAL,
+  NOTE_DUR,
+  MODU_VAL,
+  MODU_DUR,
+};
+
+const uint32_t note_dur_vals[20] = {
+    0,        0,       0,       0,       192 / 32, 192 / 24, 192 / 16,
+    192 / 12, 192 / 8, 192 / 6, 192 / 4, 192 / 3,  192 / 2,  192,
+    192 * 2,  192 * 3, 192 * 4, 192 * 6, 192 * 8};
+
 typedef struct Zeemo {
   enum View view;
   uint8_t subview;
@@ -42,14 +54,12 @@ void Zeemo_init(Zeemo *self) {
     }
   }
 
-  SimpleSequence_add(&self->seq[self->view][self->subview], 4);
-  SimpleSequence_add(&self->seq[self->view][self->subview], 5);
-  SimpleSequence_add(&self->seq[self->view][self->subview], 6);
-  SimpleSequence_add(&self->seq[self->view][self->subview], 7);
-  SimpleSequence_add(&self->seq[self->view][self->subview], 8);
-  SimpleSequence_add(&self->seq[self->view][self->subview], 7);
-  SimpleSequence_add(&self->seq[self->view][self->subview], 6);
-  SimpleSequence_add(&self->seq[self->view][self->subview], 5);
+  SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 4);
+  SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 6);
+  SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 8);
+  SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 6);
+  SimpleSequence_add(&self->seq[self->view][NOTE_DUR], 8);
+  SimpleSequence_add(&self->seq[self->view][NOTE_DUR], 10);
 }
 
 void Zeemo_change_view(Zeemo *self, enum View view) {
@@ -85,6 +95,40 @@ void Zeemo_update(Zeemo *self) {
     }
     DAC_update(dac);
     return;
+  }
+}
+
+void Zeemo_tick(Zeemo *self, uint64_t total_ticks) {
+  // go through each voice
+  for (uint8_t i = 0; i < 4; i++) {
+    // skip voices that have no notes
+    if (self->seq[VIEW_VOICE_1 + i][NOTE_VAL].len == 0 ||
+        self->seq[VIEW_VOICE_1 + i][NOTE_DUR].len == 0) {
+      continue;
+    }
+    // find the total duration
+    uint64_t dur_ticks = 0;
+    for (uint8_t j = 0; j < 4; j++) {
+      dur_ticks += note_dur_vals[self->seq[VIEW_VOICE_1 + i][NOTE_DUR].vals[j]];
+    }
+
+    // printf("[zeemo] voice %d, dur_ticks: %d, %lld, %d\n", i, dur_ticks,
+    //        total_ticks, total_ticks % dur_ticks);
+
+    dur_ticks = total_ticks % dur_ticks;
+    int8_t index = -1;
+    uint64_t dur_total = 0;
+    for (uint8_t j = 0; j < self->seq[VIEW_VOICE_1 + i][NOTE_DUR].len; j++) {
+      if (dur_total == dur_ticks) {
+        index = j;
+        break;
+      }
+      dur_total += note_dur_vals[self->seq[VIEW_VOICE_1 + i][NOTE_DUR].vals[j]];
+    }
+    if (index == -1) {
+      continue;
+    }
+    printf("[zeemo] voice %d, index: %d\n", i, index);
   }
 }
 
