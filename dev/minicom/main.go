@@ -88,13 +88,13 @@ func serialPortReader(currentBaudRate *int, baudRateChange chan int, dataChannel
 	}
 
 	// create one second periodic timer
-	timer := time.NewTicker(2 * time.Second)
+	timer := time.NewTicker(10 * time.Second)
 
 	for {
 		select {
 		case <-timer.C:
 			if port != nil {
-				log.Tracef("sending v")
+				// log.Tracef("sending v")
 				port.Write([]byte("v"))
 				port.SetReadTimeout(time.Millisecond * 100) // Set a short timeout for non-blocking read
 				buf := make([]byte, 128)
@@ -106,7 +106,7 @@ func serialPortReader(currentBaudRate *int, baudRateChange chan int, dataChannel
 				} else {
 					data := make([]byte, n)
 					copy(data, buf[:n])
-					log.Tracef("read %s", string(data))
+					// log.Tracef("read %s", string(data))
 				}
 			}
 		case <-stopChannel:
@@ -125,7 +125,7 @@ func serialPortReader(currentBaudRate *int, baudRateChange chan int, dataChannel
 			}
 			if port == nil {
 				time.Sleep(100 * time.Millisecond)
-				log.Tracef("unable to open port")
+				// log.Tracef("unable to open port")
 				continue
 			}
 

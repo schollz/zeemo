@@ -36,30 +36,35 @@ bool btn_onboard_value = 0;
 void button_held_fn(uint8_t key) {
   printf("[bh] held %d\n", key);
   if (key < 4) {
-    Zeemo_change_subview(zeemo, key);
+    Zeemo_change_subview(&zeemo, key);
   }
 }
 
 void button_held_long_fn(uint8_t key) {
   printf("[bh] held long %d\n", key);
   if (key < 4) {
-    if (zeemo->view >= VIEW_CHORD) {
-      Zeemo_start_recording(zeemo);
-    } else if (zeemo->view == VIEW_MAIN) {
+    if (zeemo.view >= VIEW_CHORD) {
+      Zeemo_start_recording(&zeemo);
+    } else if (zeemo.view == VIEW_MAIN) {
       if (key == 3) {
-        Zeemo_toggle_tuning_mode(zeemo);
+        Zeemo_toggle_tuning_mode(&zeemo);
       }
     }
   }
 }
 
-void button_on_fn(uint8_t key) { printf("[bh] key %d down\n", key); }
+void button_on_fn(uint8_t key) {
+  printf("[bh] key %d down\n", key);
+  if (key >= 4) {
+    Zeemo_press(&zeemo, key);
+  }
+}
 
 void button_off_fn(uint8_t key, uint32_t held_time) {
   printf("[bh] key %d up, held %ld\n", key, held_time);
   if (held_time < DURATION_HOLD) {
     if (key < 4) {
-      Zeemo_change_view(zeemo, VIEW_VOICE_1 + key);
+      Zeemo_change_view(&zeemo, VIEW_VOICE_1 + key);
     }
   }
 }
@@ -76,12 +81,12 @@ void button_handler() {
     btn_onboard_value = btn_onboard;
     printf("[bh] onboard %d\n", btn_onboard);
     if (btn_onboard_value == 1) {
-      if (zeemo->view != VIEW_CHORD) {
-        zeemo->view = VIEW_CHORD;
+      if (zeemo.view != VIEW_CHORD) {
+        zeemo.view = VIEW_CHORD;
       } else {
-        zeemo->view = VIEW_MAIN;
+        zeemo.view = VIEW_MAIN;
       }
-      printf("view: %d\n", zeemo->view);
+      printf("view: %d\n", zeemo.view);
     }
   }
 

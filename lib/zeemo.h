@@ -7,6 +7,7 @@
 
 #include "dac.h"
 #include "sequence.h"
+#include "simplesequence.h"
 
 // 6 views total (main, chord, voice 1, voice 2, voice 3, voice 4)
 // 5 views have sequencers (chord, voice 1, voice 2, voice 3, voice 4)
@@ -24,20 +25,32 @@ enum View {
 typedef struct Zeemo {
   enum View view;
   uint8_t subview;
-  Sequence seq[5][4];
+  SimpleSequence seq[6][4];
   int16_t bpm;
   bool recording;
   bool mode_tuning;
 } Zeemo;
 
-Zeemo *Zeemo_malloc() {
-  Zeemo *self = (Zeemo *)malloc(sizeof(Zeemo));
+void Zeemo_init(Zeemo *self) {
   self->bpm = 60;
-  self->view = VIEW_MAIN;
-  return self;
-}
+  self->view = VIEW_VOICE_1;
+  self->subview = 0;
 
-void Zeemo_free(Zeemo *self) { free(self); }
+  for (uint8_t i = 0; i < 5; i++) {
+    for (uint8_t j = 0; j < 4; j++) {
+      SimpleSequence_init(&self->seq[i][j]);
+    }
+  }
+
+  SimpleSequence_add(&self->seq[self->view][self->subview], 4);
+  SimpleSequence_add(&self->seq[self->view][self->subview], 5);
+  SimpleSequence_add(&self->seq[self->view][self->subview], 6);
+  SimpleSequence_add(&self->seq[self->view][self->subview], 7);
+  SimpleSequence_add(&self->seq[self->view][self->subview], 8);
+  SimpleSequence_add(&self->seq[self->view][self->subview], 7);
+  SimpleSequence_add(&self->seq[self->view][self->subview], 6);
+  SimpleSequence_add(&self->seq[self->view][self->subview], 5);
+}
 
 void Zeemo_change_view(Zeemo *self, enum View view) {
   self->view = view;
@@ -52,6 +65,7 @@ void Zeemo_change_subview(Zeemo *self, uint8_t subview) {
 
 void Zeemo_start_recording(Zeemo *self) {
   self->recording = true;
+  SimpleSequence_clear(&self->seq[self->view][self->subview]);
   printf("[zeemo] recording %d\n", self->recording);
 }
 
@@ -71,6 +85,13 @@ void Zeemo_update(Zeemo *self) {
     }
     DAC_update(dac);
     return;
+  }
+}
+
+void Zeemo_press(Zeemo *self, uint8_t key) {
+  if (self->recording && key > 3) {
+    printf("[zeemo] recording key %d\n", key);
+    SimpleSequence_add(&self->seq[self->view][self->subview], key);
   }
 }
 

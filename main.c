@@ -1,44 +1,15 @@
-// stdlib
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-// pico stdlib
-#include "hardware/adc.h"
-#include "hardware/clocks.h"
-#include "hardware/i2c.h"
-#include "hardware/irq.h"
-#include "hardware/pio.h"
-#include "hardware/structs/clocks.h"
-#include "pico/bootrom.h"
-#include "pico/stdlib.h"
-// zeemo lib
-#include "lib/WS2812.h"
-#include "lib/adsr.h"
-#include "lib/dac.h"
-#include "lib/filterexp.h"
-#include "lib/knob_change.h"
-// zeemo imports (order matters!)
-#include "lib/globals.h"
-//
-#include "lib/zeemo.h"
-Zeemo *zeemo;
-//
-#include "lib/button_handler.h"
-#include "lib/leds2.h"
-//
-#include "lib/screen.h"
+#include "lib/include.h"
 
 struct repeating_timer timer;
 int16_t bpm_last = 100;
 uint64_t bpm_timer_counter = 0;
 bool down_beat = false;
 bool repeating_timer_callback(struct repeating_timer *t) {
-  if (bpm_last != zeemo->bpm) {
-    printf("[rtc] updating bpm timer: %d-> %d\n", bpm_last, zeemo->bpm);
-    bpm_last = zeemo->bpm;
+  if (bpm_last != zeemo.bpm) {
+    printf("[rtc] updating bpm timer: %d-> %d\n", bpm_last, zeemo.bpm);
+    bpm_last = zeemo.bpm;
     cancel_repeating_timer(&timer);
-    add_repeating_timer_us(-(round(30000000 / zeemo->bpm / 96)),
+    add_repeating_timer_us(-(round(30000000 / zeemo.bpm / 96)),
                            repeating_timer_callback, NULL, &timer);
   }
 
@@ -95,7 +66,7 @@ int main() {
   screen_init();
 
   // setup zeemo
-  zeemo = Zeemo_malloc();
+  Zeemo_init(&zeemo);
 
   // setup adcs
   adc_init();
@@ -114,7 +85,7 @@ int main() {
   // it again 500ms later regardless of how long the callback took to execute
   // add_repeating_timer_ms(-1000, repeating_timer_callback, NULL, &timer);
   // cancel_repeating_timer(&timer);
-  add_repeating_timer_us(-(round(30000000 / zeemo->bpm / 96)),
+  add_repeating_timer_us(-(round(30000000 / zeemo.bpm / 96)),
                          repeating_timer_callback, NULL, &timer);
 
   uint16_t debounce_startup = 100;
@@ -136,13 +107,13 @@ int main() {
       if (adc > 0) {
         adc = FilterExp_update(filter_exp[knob], adc);
         printf("[main] knob %d: %d\n", knob, adc);
-        switch (zeemo->view) {
+        switch (zeemo.view) {
           case VIEW_MAIN:
             switch (knob) {
               case 0:
                 break;
               case 1:
-                zeemo->bpm = adc * 240 / 4095 + 60;
+                zeemo.bpm = adc * 240 / 4095 + 60;
                 break;
               case 2:
                 break;
@@ -154,7 +125,7 @@ int main() {
       }
     }
 
-    Zeemo_update(zeemo);
+    Zeemo_update(&zeemo);
 
     button_handler();
 

@@ -12,8 +12,8 @@ void screen_init() {
 void screen_update() {
   LEDS_clear(leds);
   for (uint8_t i = 0; i < 4; i++) {
-    if (i == zeemo->subview) {
-      if (zeemo->recording) {
+    if (i == zeemo.subview) {
+      if (zeemo.recording) {
         LEDS_set(leds, i, LED_BLINK);
       } else {
         LEDS_set(leds, i, LED_BRIGHT);
@@ -22,9 +22,14 @@ void screen_update() {
       LEDS_set(leds, i, LED_NONE);
     }
   }
+  int8_t led_sequence =
+      SimpleSequence_leds(&zeemo.seq[zeemo.view][zeemo.subview]);
+  if (led_sequence >= 0) {
+    LEDS_set(leds, led_sequence, LED_BRIGHT);
+  }
   LEDS_render(leds);
 
-  switch (zeemo->view) {
+  switch (zeemo.view) {
     case VIEW_MAIN:
       WS2812_set_color(ws2812, 0, WS2812_RED, 255);
       WS2812_set_color(ws2812, 1, WS2812_RED, 255);
