@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include "dac.h"
+#include "music.h"
 #include "sequence.h"
 #include "simplesequence.h"
 
@@ -39,36 +40,49 @@ typedef struct Zeemo {
   uint8_t subview;
   SimpleSequence seq[6][4];
   int8_t playing[6][4];
+  int8_t last_note[4];
   int16_t bpm;
   bool recording;
   bool mode_tuning;
+  int8_t chord;
 } Zeemo;
 
 void Zeemo_init(Zeemo *self) {
   self->bpm = 60;
   self->view = VIEW_VOICE_1;
   self->subview = 0;
+  self->chord = 0;
 
   for (uint8_t i = 0; i < 6; i++) {
     for (uint8_t j = 0; j < 4; j++) {
       SimpleSequence_init(&self->seq[i][j]);
       self->playing[i][j] = -1;
+      self->last_note[j] = -1;
     }
   }
 
-  SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 4);
-  SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 11);
-  SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 6);
-  SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 11);
-  SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 8);
-  SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 11);
-  SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 6);
-  SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 11);
-
+  // chords
+  SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 4);
+  SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 9);
+  SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 7);
+  SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 8);
   // durations
-  SimpleSequence_add(&self->seq[self->view][NOTE_DUR], 10);
+  SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_DUR], 10);
 
-  SimpleSequence_reset(&self->seq[self->view][NOTE_VAL]);
+  // voice 1 notes
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 4);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 6);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 8);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 6);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
+  // durations
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_DUR], 10);
+
+  SimpleSequence_reset(&self->seq[VIEW_VOICE_1][NOTE_VAL]);
+  SimpleSequence_reset(&self->seq[VIEW_CHORD][NOTE_DUR]);
 }
 
 void Zeemo_change_view(Zeemo *self, enum View view) {
@@ -108,11 +122,15 @@ void Zeemo_update(Zeemo *self) {
 }
 
 int8_t Zeemo_duration_index(Zeemo *self, uint8_t i, uint8_t j,
-                            uint64_t total_ticks) {
+                            uint64_t total_ticks, bool is_chord) {
   // find the total duration
   uint64_t dur_ticks = 0;
+  uint8_t multipler = 1;
+  if (is_chord) {
+    multipler = 16;
+  }
   for (uint8_t k = 0; k < 4; k++) {
-    dur_ticks += note_dur_vals[self->seq[i][j].vals[k]];
+    dur_ticks += note_dur_vals[self->seq[i][j].vals[k]] * multipler;
   }
   dur_ticks = total_ticks % dur_ticks;
   int8_t index = -1;
@@ -122,12 +140,27 @@ int8_t Zeemo_duration_index(Zeemo *self, uint8_t i, uint8_t j,
       index = k;
       break;
     }
-    dur_total += note_dur_vals[self->seq[i][j].vals[k]];
+    dur_total += note_dur_vals[self->seq[i][j].vals[k]] * multipler;
   }
   return index;
 }
 
 void Zeemo_tick(Zeemo *self, uint64_t total_ticks) {
+  // iterate the chord
+  if (self->seq[VIEW_CHORD][NOTE_VAL].len > 0 &&
+      self->seq[VIEW_CHORD][NOTE_DUR].len > 0) {
+    int8_t index =
+        Zeemo_duration_index(self, VIEW_CHORD, NOTE_DUR, total_ticks, true);
+    if (index != -1) {
+      self->playing[VIEW_CHORD][NOTE_DUR] =
+          self->seq[VIEW_CHORD][NOTE_DUR].vals[index] * 8;
+      self->playing[VIEW_CHORD][NOTE_VAL] =
+          SimpleSequence_next(&self->seq[VIEW_CHORD][NOTE_VAL]);
+
+      self->chord = self->playing[VIEW_CHORD][NOTE_VAL] - 4;
+      printf("[zeemo] chord %d\n", self->chord);
+    }
+  }
   // go through each voice
   for (uint8_t i = 0; i < 4; i++) {
     // skip voices that have no notes
@@ -135,8 +168,8 @@ void Zeemo_tick(Zeemo *self, uint64_t total_ticks) {
         self->seq[VIEW_VOICE_1 + i][NOTE_DUR].len == 0) {
       continue;
     }
-    int8_t index =
-        Zeemo_duration_index(self, VIEW_VOICE_1 + i, NOTE_DUR, total_ticks);
+    int8_t index = Zeemo_duration_index(self, VIEW_VOICE_1 + i, NOTE_DUR,
+                                        total_ticks, false);
     if (index == -1) {
       continue;
     }
@@ -144,8 +177,17 @@ void Zeemo_tick(Zeemo *self, uint64_t total_ticks) {
         self->seq[VIEW_VOICE_1 + i][NOTE_DUR].vals[index];
     self->playing[VIEW_VOICE_1 + i][NOTE_VAL] =
         SimpleSequence_next(&self->seq[VIEW_VOICE_1 + i][NOTE_VAL]);
-    // printf("[zeemo] voice %d, index: %d, note_val: %d\n", i, index,
-    //        self->playing[VIEW_VOICE_1 + i][NOTE_VAL]);
+    if (self->playing[VIEW_VOICE_1 + i][NOTE_VAL] == 11 &&
+        self->playing[VIEW_VOICE_1 + i][NOTE_VAL] == 19) {
+      // note off
+      printf("[zeemo] voice %d, note off: %d\n", i, self->last_note[i]);
+    } else {
+      int8_t note = scale_major[self->playing[VIEW_VOICE_1 + i][NOTE_VAL] - 4 +
+                                self->chord] %
+                    12;
+      printf("[zeemo] voice %d, note on: %d\n", i, note);
+      self->last_note[i] = note;
+    }
   }
 }
 
