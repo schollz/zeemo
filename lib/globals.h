@@ -28,3 +28,10 @@ DAC *dac;
 // utilities
 typedef void (*callback_fn_uint8_t_uint32_t)(uint8_t, uint32_t);
 typedef void (*callback_fn_uint8_t)(uint8_t);
+
+// utility functions
+#define util_clamp(x, a, b) ((x) > (b) ? (b) : ((x) < (a) ? (a) : (x)))
+
+#define linlin(x, xmin, xmax, ymin, ymax)                                 \
+  util_clamp((ymin + (x - xmin) * (ymax - ymin) / (xmax - xmin)), (ymin), \
+             (ymax))

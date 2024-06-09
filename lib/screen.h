@@ -9,7 +9,7 @@ void screen_init() {
   LEDS_render(leds);
 }
 
-void screen_update() {
+void screen_update(ButtonMatrix *bm) {
   LEDS_clear(leds);
   for (uint8_t i = 0; i < 4; i++) {
     if (i == zeemo.subview) {
@@ -29,6 +29,14 @@ void screen_update() {
   // }
   if (zeemo.playing[zeemo.view][zeemo.subview] >= 0)
     LEDS_set(leds, zeemo.playing[zeemo.view][zeemo.subview], LED_BRIGHT);
+
+  // illuminate pressed buttons
+  for (uint8_t i = 0; i < 20; i++) {
+    if (bm->button_time[i] > 0 && LEDS_is_on(leds, i) == false) {
+      LEDS_set(leds, i, LED_BRIGHT);
+    }
+  }
+
   LEDS_render(leds);
 
   switch (zeemo.view) {
@@ -53,7 +61,10 @@ void screen_update() {
       WS2812_set_color(ws2812, 7, WS2812_MAGENTA, 255);
       break;
     case VIEW_VOICE_1:
-      WS2812_set_color(ws2812, 0, WS2812_RED, 255);
+      uint8_t scale = 255;
+      if (zeemo.playing[zeemo.view][0] >= 0)
+        scale = linlin(zeemo.playing[zeemo.view][0], 3, 20, 0, 255);
+      WS2812_set_color(ws2812, 0, WS2812_RED, 255 * scale / 255);
       WS2812_set_color(ws2812, 1, WS2812_RED, 255);
       WS2812_set_color(ws2812, 2, WS2812_YELLOW, 0);
       WS2812_set_color(ws2812, 3, WS2812_YELLOW, 0);

@@ -22,6 +22,9 @@
 //
 // See http://creativecommons.org/licenses/MIT/ for more information.
 
+#ifndef BUTTON_HANDLER_H
+#define BUTTON_HANDLER_H 1
+
 #include "buttonmatrix3.h"
 
 // keys
@@ -30,7 +33,6 @@
 #define KEY_C 2
 #define KEY_D 3
 
-ButtonMatrix *bm;
 bool btn_onboard_value = 0;
 
 void button_held_fn(uint8_t key) {
@@ -69,12 +71,12 @@ void button_off_fn(uint8_t key, uint32_t held_time) {
   }
 }
 
-void button_handler_init() {
-  bm = ButtonMatrix_create(BTN_ROW_START, BTN_COL_START, button_on_fn,
-                           button_held_fn, button_held_long_fn, button_off_fn);
+void button_handler_init(ButtonMatrix *bm) {
+  ButtonMatrix_init(bm, button_on_fn, button_held_fn, button_held_long_fn,
+                    button_off_fn);
 }
 
-void button_handler() {
+void button_handler(ButtonMatrix *bm) {
   // read onboard button
   bool btn_onboard = gpio_get(BTN_ONBOARD);
   if (btn_onboard != btn_onboard_value) {
@@ -93,3 +95,5 @@ void button_handler() {
   // read the latest from the queue
   ButtonMatrix_read(bm);
 }
+
+#endif

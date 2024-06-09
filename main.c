@@ -62,7 +62,8 @@ int main() {
   dac = DAC_malloc();
 
   // setup button handler
-  button_handler_init();
+  ButtonMatrix *bm = ButtonMatrix_malloc(BTN_ROW_START, BTN_COL_START);
+  button_handler_init(bm);
 
   // setup LEDs screen
   screen_init();
@@ -129,9 +130,9 @@ int main() {
 
     Zeemo_update(&zeemo);
 
-    button_handler();
+    button_handler(bm);
 
-    screen_update();
+    screen_update(bm);
 
     sleep_us(100);
   }

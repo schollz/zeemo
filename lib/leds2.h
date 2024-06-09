@@ -122,6 +122,10 @@ void LEDS_set(LEDS *leds, uint8_t led, uint8_t state) {
   leds->state[led / 4][led % 4] = state;
 }
 
+bool LEDS_is_on(LEDS *leds, uint8_t led) {
+  return leds->state[led / 4][led % 4] > 0;
+}
+
 void LEDS_clear(LEDS *leds) {
   for (uint8_t i = 0; i < LEDS_ROWS; i++) {
     for (uint8_t j = 0; j < LEDS_COLS; j++) {

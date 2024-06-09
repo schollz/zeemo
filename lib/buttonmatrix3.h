@@ -22,6 +22,9 @@
 //
 // See http://creativecommons.org/licenses/MIT/ for more information.
 
+#ifndef BUTTONMATRIX3_H
+#define BUTTONMATRIX3_H 1
+
 #include "buttonmatrix3.pio.h"
 #include "sort.h"
 
@@ -57,19 +60,21 @@ void ButtonMatrix_dec_to_binary(ButtonMatrix *bm, uint32_t num) {
   printf("\n");
 }
 
-ButtonMatrix *ButtonMatrix_create(uint base_input, uint base_output,
-                                  callback_fn_uint8_t fn_button_on,
-                                  callback_fn_uint8_t fn_button_held,
-                                  callback_fn_uint8_t fn_button_held_long,
-                                  callback_fn_uint8_t_uint32_t fn_button_off) {
-  ButtonMatrix *bm = (ButtonMatrix *)malloc(sizeof(ButtonMatrix));
-  bm->pio = pio0;
-  bm->sm = 1;
-  bm->last_value = 0;
+void ButtonMatrix_init(ButtonMatrix *bm, callback_fn_uint8_t fn_button_on,
+                       callback_fn_uint8_t fn_button_held,
+                       callback_fn_uint8_t fn_button_held_long,
+                       callback_fn_uint8_t_uint32_t fn_button_off) {
   bm->fn_button_on = fn_button_on;
   bm->fn_button_off = fn_button_off;
   bm->fn_button_held = fn_button_held;
   bm->fn_button_held_long = fn_button_held_long;
+}
+
+ButtonMatrix *ButtonMatrix_malloc(uint base_input, uint base_output) {
+  ButtonMatrix *bm = (ButtonMatrix *)malloc(sizeof(ButtonMatrix));
+  bm->pio = pio0;
+  bm->sm = 1;
+  bm->last_value = 0;
 
   for (int i = 0; i < BUTTONMATRIX_ROWS; i++) {
     pio_gpio_init(bm->pio, base_input + i);
@@ -178,3 +183,5 @@ void ButtonMatrix_read(ButtonMatrix *bm) {
 
   bm->last_value = value;
 }
+
+#endif
