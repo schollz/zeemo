@@ -25,7 +25,7 @@ int8_t SimpleSequence_leds(SimpleSequence *self) {
   uint32_t ct = to_ms_since_boot(get_absolute_time());
   uint32_t diff = ct - self->show_last;
   int8_t val = -1;
-  uint16_t max_diff = 200;
+  uint16_t max_diff = 500;
   uint16_t min_diff = max_diff * 2 / 3;
   if (self->show_i == self->len - 1) {
     max_diff += 350;
@@ -58,6 +58,8 @@ void SimpleSequence_clear(SimpleSequence *self) {
   self->len = 0;
 }
 
+void SimpleSequence_reset(SimpleSequence *self) { self->i = self->len; }
+
 void SimpleSequence_add(SimpleSequence *self, int8_t val) {
   self->vals[self->len] = val;
   self->len++;
@@ -73,18 +75,6 @@ int8_t SimpleSequence_next(SimpleSequence *self) {
     self->i = 0;
   }
   return v;
-}
-
-int8_t SimpleSequence_find_cumulative(SimpleSequence *self, uint32_t val) {
-  // finds the index of the cumulative sum that equals val
-  uint32_t sum = 0;
-  for (uint8_t i = 0; i < self->len; i++) {
-    if (sum == val) {
-      return i;
-    }
-    sum += self->vals[i];
-  }
-  return -1;
 }
 
 #endif

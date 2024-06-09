@@ -22,11 +22,13 @@ void screen_update() {
       LEDS_set(leds, i, LED_NONE);
     }
   }
-  int8_t led_sequence =
-      SimpleSequence_leds(&zeemo.seq[zeemo.view][zeemo.subview]);
-  if (led_sequence >= 0) {
-    LEDS_set(leds, led_sequence, LED_BRIGHT);
-  }
+  // int8_t led_sequence =
+  //     SimpleSequence_leds(&zeemo.seq[zeemo.view][zeemo.subview]);
+  // if (led_sequence >= 0) {
+  //   LEDS_set(leds, led_sequence, LED_DIM);
+  // }
+  if (zeemo.playing[zeemo.view][zeemo.subview] >= 0)
+    LEDS_set(leds, zeemo.playing[zeemo.view][zeemo.subview], LED_BRIGHT);
   LEDS_render(leds);
 
   switch (zeemo.view) {

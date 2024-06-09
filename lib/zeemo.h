@@ -38,6 +38,7 @@ typedef struct Zeemo {
   enum View view;
   uint8_t subview;
   SimpleSequence seq[6][4];
+  int8_t playing[6][4];
   int16_t bpm;
   bool recording;
   bool mode_tuning;
@@ -48,18 +49,26 @@ void Zeemo_init(Zeemo *self) {
   self->view = VIEW_VOICE_1;
   self->subview = 0;
 
-  for (uint8_t i = 0; i < 5; i++) {
+  for (uint8_t i = 0; i < 6; i++) {
     for (uint8_t j = 0; j < 4; j++) {
       SimpleSequence_init(&self->seq[i][j]);
+      self->playing[i][j] = -1;
     }
   }
 
   SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 4);
+  SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 11);
   SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 6);
+  SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 11);
   SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 8);
+  SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 11);
   SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 6);
+  SimpleSequence_add(&self->seq[self->view][NOTE_VAL], 11);
+
+  // durations
   SimpleSequence_add(&self->seq[self->view][NOTE_DUR], 8);
-  SimpleSequence_add(&self->seq[self->view][NOTE_DUR], 10);
+
+  SimpleSequence_reset(&self->seq[self->view][NOTE_VAL]);
 }
 
 void Zeemo_change_view(Zeemo *self, enum View view) {
@@ -128,7 +137,12 @@ void Zeemo_tick(Zeemo *self, uint64_t total_ticks) {
     if (index == -1) {
       continue;
     }
-    printf("[zeemo] voice %d, index: %d\n", i, index);
+    self->playing[VIEW_VOICE_1 + i][NOTE_DUR] =
+        self->seq[VIEW_VOICE_1 + i][NOTE_DUR].vals[index];
+    self->playing[VIEW_VOICE_1 + i][NOTE_VAL] =
+        SimpleSequence_next(&self->seq[VIEW_VOICE_1 + i][NOTE_VAL]);
+    printf("[zeemo] voice %d, index: %d, note_val: %d\n", i, index,
+           self->playing[VIEW_VOICE_1 + i][NOTE_VAL]);
   }
 }
 
