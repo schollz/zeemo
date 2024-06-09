@@ -49,7 +49,7 @@ typedef struct Zeemo {
 
 void Zeemo_init(Zeemo *self) {
   self->bpm = 60;
-  self->view = VIEW_VOICE_1;
+  self->view = VIEW_MAIN;
   self->subview = 0;
   self->chord = 0;
 
@@ -79,7 +79,7 @@ void Zeemo_init(Zeemo *self) {
   SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 6);
   SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
   // durations
-  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_DUR], 10);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_DUR], 12);
 
   SimpleSequence_reset(&self->seq[VIEW_VOICE_1][NOTE_VAL]);
   SimpleSequence_reset(&self->seq[VIEW_CHORD][NOTE_DUR]);
@@ -119,6 +119,9 @@ void Zeemo_update(Zeemo *self) {
     DAC_update(dac);
     return;
   }
+  DAC_set_voltage(dac, 3, ((float)self->last_note[0]) / 12.0);
+  DAC_set_voltage(dac, 2, adsr[0]->level * 4.0);
+  DAC_update(dac);
 }
 
 int8_t Zeemo_duration_index(Zeemo *self, uint8_t i, uint8_t j,
@@ -146,6 +149,7 @@ int8_t Zeemo_duration_index(Zeemo *self, uint8_t i, uint8_t j,
 }
 
 void Zeemo_tick(Zeemo *self, uint64_t total_ticks) {
+  uint32_t ct = to_ms_since_boot(get_absolute_time());
   // iterate the chord
   if (self->seq[VIEW_CHORD][NOTE_VAL].len > 0 &&
       self->seq[VIEW_CHORD][NOTE_DUR].len > 0) {
@@ -177,16 +181,18 @@ void Zeemo_tick(Zeemo *self, uint64_t total_ticks) {
         self->seq[VIEW_VOICE_1 + i][NOTE_DUR].vals[index];
     self->playing[VIEW_VOICE_1 + i][NOTE_VAL] =
         SimpleSequence_next(&self->seq[VIEW_VOICE_1 + i][NOTE_VAL]);
-    if (self->playing[VIEW_VOICE_1 + i][NOTE_VAL] == 11 &&
+    if (self->playing[VIEW_VOICE_1 + i][NOTE_VAL] == 11 ||
         self->playing[VIEW_VOICE_1 + i][NOTE_VAL] == 19) {
       // note off
       printf("[zeemo] voice %d, note off: %d\n", i, self->last_note[i]);
+      ADSR_gate(adsr[i], false, ct);
     } else {
       int8_t note = scale_major[self->playing[VIEW_VOICE_1 + i][NOTE_VAL] - 4 +
-                                self->chord] %
-                    12;
+                                self->chord];
+      note = note % 12;
       printf("[zeemo] voice %d, note on: %d\n", i, note);
       self->last_note[i] = note;
+      ADSR_gate(adsr[i], true, ct);
     }
   }
 }

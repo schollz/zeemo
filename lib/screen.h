@@ -65,7 +65,8 @@ void screen_update(ButtonMatrix *bm) {
       if (zeemo.playing[zeemo.view][0] >= 0)
         scale = linlin(zeemo.playing[zeemo.view][0], 3, 20, 0, 255);
       WS2812_set_color(ws2812, 0, WS2812_RED, 255 * scale / 255);
-      WS2812_set_color(ws2812, 1, WS2812_RED, 255);
+      scale = 255 * adsr[0]->level;
+      WS2812_set_color(ws2812, 1, WS2812_RED, 255 * scale / 255);
       WS2812_set_color(ws2812, 2, WS2812_YELLOW, 0);
       WS2812_set_color(ws2812, 3, WS2812_YELLOW, 0);
       WS2812_set_color(ws2812, 4, WS2812_GREEN, 0);

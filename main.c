@@ -83,6 +83,11 @@ int main() {
     filter_exp[i] = FilterExp_create(10);
   }
 
+  // setup adsrs
+  for (uint8_t i = 0; i < 4; i++) {
+    adsr[i] = ADSR_malloc(500, 100, 1, 200, 2.7);
+  }
+
   // setup timer
   // Negative delay so means we will call repeating_timer_callback, and call
   // it again 500ms later regardless of how long the callback took to execute
@@ -129,6 +134,11 @@ int main() {
     }
 
     Zeemo_update(&zeemo);
+
+    uint32_t ct = to_ms_since_boot(get_absolute_time());
+    for (uint8_t i = 0; i < 4; i++) {
+      ADSR_process(adsr[i], (float)ct);
+    }
 
     button_handler(bm);
 

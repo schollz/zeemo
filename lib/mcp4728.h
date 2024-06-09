@@ -19,7 +19,7 @@ void MCP4728_update(MCP4728 *self) {
   // page 38 http://ww1.microchip.com/downloads/en/devicedoc/22187e.pdf
   uint8_t data[8];
   for (int i = 0; i < 4; i++) {
-    printf("voltage[%d] = %f\n", i, self->voltage[i]);
+    // printf("voltage[%d] = %f\n", i, self->voltage[i]);
     uint16_t value =
         (uint16_t)round(self->voltage[i] * 4095.0 / self->voltage_reference);
     data[i * 2] = 0b00000000 | (value >> 8);

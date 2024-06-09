@@ -24,6 +24,7 @@
 // globals
 WS2812 *ws2812;
 DAC *dac;
+ADSR *adsr[4];
 
 // utilities
 typedef void (*callback_fn_uint8_t_uint32_t)(uint8_t, uint32_t);
