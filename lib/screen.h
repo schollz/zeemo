@@ -10,6 +10,7 @@ void screen_init() {
 }
 
 void screen_update() {
+  LEDS_clear(leds);
   for (uint8_t i = 0; i < 4; i++) {
     if (i == zeemo->subview) {
       if (zeemo->recording) {

@@ -57,7 +57,7 @@ typedef struct PCA9552 {
   uint8_t leds[4][4];
   uint8_t row[16];
   uint8_t col[16];
-  uint8_t leds_last[4][4];
+  int8_t leds_last[4][4];
   uint8_t lastSet[3];
   bool changed[4];
   struct i2c_inst *i2c;
@@ -203,7 +203,7 @@ PCA9552 *PCA9552_create(const uint8_t deviceAddress, struct i2c_inst *i2c_use,
   for (uint8_t i = 0; i < 4; i++) {
     for (uint8_t j = 0; j < 4; j++) {
       pca->leds[i][j] = 0;
-      pca->leds_last[i][j] = 0;
+      pca->leds_last[i][j] = -1;
     }
   }
 
