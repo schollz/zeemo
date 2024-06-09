@@ -39,16 +39,23 @@ void screen_update(ButtonMatrix *bm) {
 
   LEDS_render(leds);
 
+  uint8_t note_brightness[4] = {255, 255, 255, 255};
+  uint8_t note_env[4] = {0, 0, 0, 0};
+  for (uint8_t i = 0; i < 4; i++) {
+    note_brightness[i] = linlin(zeemo.last_note[0] % 12, 0, 11, 0, 255);
+    note_env[i] = adsr[i]->level * 255;
+  }
+
   switch (zeemo.view) {
     case VIEW_MAIN:
-      WS2812_set_color(ws2812, 0, WS2812_RED, 255);
-      WS2812_set_color(ws2812, 1, WS2812_RED, 255);
-      WS2812_set_color(ws2812, 2, WS2812_YELLOW, 255);
-      WS2812_set_color(ws2812, 3, WS2812_YELLOW, 255);
-      WS2812_set_color(ws2812, 4, WS2812_GREEN, 255);
-      WS2812_set_color(ws2812, 5, WS2812_GREEN, 255);
-      WS2812_set_color(ws2812, 6, WS2812_BLUE, 255);
-      WS2812_set_color(ws2812, 7, WS2812_BLUE, 255);
+      WS2812_set_color(ws2812, 0, WS2812_RED, note_brightness[0]);
+      WS2812_set_color(ws2812, 1, WS2812_RED, note_env[0]);
+      WS2812_set_color(ws2812, 2, WS2812_YELLOW, note_brightness[1]);
+      WS2812_set_color(ws2812, 3, WS2812_YELLOW, note_env[1]);
+      WS2812_set_color(ws2812, 4, WS2812_GREEN, note_brightness[2]);
+      WS2812_set_color(ws2812, 5, WS2812_GREEN, note_env[2]);
+      WS2812_set_color(ws2812, 6, WS2812_BLUE, note_brightness[3]);
+      WS2812_set_color(ws2812, 7, WS2812_BLUE, note_env[3]);
       break;
     case VIEW_CHORD:
       WS2812_set_color(ws2812, 0, WS2812_MAGENTA, 255);
@@ -61,12 +68,8 @@ void screen_update(ButtonMatrix *bm) {
       WS2812_set_color(ws2812, 7, WS2812_MAGENTA, 255);
       break;
     case VIEW_VOICE_1:
-      uint8_t scale = 255;
-      if (zeemo.playing[zeemo.view][0] >= 0)
-        scale = linlin(zeemo.playing[zeemo.view][0], 3, 20, 0, 255);
-      WS2812_set_color(ws2812, 0, WS2812_RED, 255 * scale / 255);
-      scale = 255 * adsr[0]->level;
-      WS2812_set_color(ws2812, 1, WS2812_RED, 255 * scale / 255);
+      WS2812_set_color(ws2812, 0, WS2812_RED, note_brightness[0]);
+      WS2812_set_color(ws2812, 1, WS2812_RED, note_env[0]);
       WS2812_set_color(ws2812, 2, WS2812_YELLOW, 0);
       WS2812_set_color(ws2812, 3, WS2812_YELLOW, 0);
       WS2812_set_color(ws2812, 4, WS2812_GREEN, 0);
@@ -77,8 +80,8 @@ void screen_update(ButtonMatrix *bm) {
     case VIEW_VOICE_2:
       WS2812_set_color(ws2812, 0, WS2812_RED, 0);
       WS2812_set_color(ws2812, 1, WS2812_RED, 0);
-      WS2812_set_color(ws2812, 2, WS2812_YELLOW, 255);
-      WS2812_set_color(ws2812, 3, WS2812_YELLOW, 255);
+      WS2812_set_color(ws2812, 2, WS2812_YELLOW, note_brightness[1]);
+      WS2812_set_color(ws2812, 3, WS2812_YELLOW, note_env[1]);
       WS2812_set_color(ws2812, 4, WS2812_GREEN, 0);
       WS2812_set_color(ws2812, 5, WS2812_GREEN, 0);
       WS2812_set_color(ws2812, 6, WS2812_BLUE, 0);
@@ -89,8 +92,8 @@ void screen_update(ButtonMatrix *bm) {
       WS2812_set_color(ws2812, 1, WS2812_RED, 0);
       WS2812_set_color(ws2812, 2, WS2812_YELLOW, 0);
       WS2812_set_color(ws2812, 3, WS2812_YELLOW, 0);
-      WS2812_set_color(ws2812, 4, WS2812_GREEN, 255);
-      WS2812_set_color(ws2812, 5, WS2812_GREEN, 255);
+      WS2812_set_color(ws2812, 4, WS2812_GREEN, note_brightness[2]);
+      WS2812_set_color(ws2812, 5, WS2812_GREEN, note_env[2]);
       WS2812_set_color(ws2812, 6, WS2812_BLUE, 0);
       WS2812_set_color(ws2812, 7, WS2812_BLUE, 0);
       break;
@@ -101,8 +104,8 @@ void screen_update(ButtonMatrix *bm) {
       WS2812_set_color(ws2812, 3, WS2812_YELLOW, 0);
       WS2812_set_color(ws2812, 4, WS2812_GREEN, 0);
       WS2812_set_color(ws2812, 5, WS2812_GREEN, 0);
-      WS2812_set_color(ws2812, 6, WS2812_BLUE, 255);
-      WS2812_set_color(ws2812, 7, WS2812_BLUE, 255);
+      WS2812_set_color(ws2812, 6, WS2812_BLUE, note_brightness[3]);
+      WS2812_set_color(ws2812, 7, WS2812_BLUE, note_env[3]);
       break;
     default:
       break;

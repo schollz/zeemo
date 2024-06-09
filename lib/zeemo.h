@@ -72,16 +72,29 @@ void Zeemo_init(Zeemo *self) {
   // voice 1 notes
   SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 4);
   SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
-  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 6);
-  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
-  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 8);
-  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
-  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 6);
-  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
+  // SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 6);
+  // SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
+  // SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 8);
+  // SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
+  // SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 6);
+  // SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
   // durations
-  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_DUR], 12);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_DUR], 13);
+
+  // voice 2 notes
+  SimpleSequence_add(&self->seq[VIEW_VOICE_2][NOTE_VAL], 4);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_2][NOTE_VAL], 11);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_2][NOTE_VAL], 6);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_2][NOTE_VAL], 11);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_2][NOTE_VAL], 8);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_2][NOTE_VAL], 11);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_2][NOTE_VAL], 6);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_2][NOTE_VAL], 11);
+  // durations
+  SimpleSequence_add(&self->seq[VIEW_VOICE_2][NOTE_DUR], 10);
 
   SimpleSequence_reset(&self->seq[VIEW_VOICE_1][NOTE_VAL]);
+  SimpleSequence_reset(&self->seq[VIEW_VOICE_2][NOTE_VAL]);
   SimpleSequence_reset(&self->seq[VIEW_CHORD][NOTE_DUR]);
 }
 
@@ -112,15 +125,17 @@ void Zeemo_update(Zeemo *self) {
   if (self->mode_tuning) {
     for (uint8_t ch = 0; ch < 4; ch++) {
       // set to 2 volts
-      DAC_set_voltage(dac, (ch * 2), 2);
+      DAC_set_voltage(dac, (ch * 2), 1);
       // set to high (4 volts)
-      DAC_set_voltage(dac, (ch * 2) + 1, 4);
+      DAC_set_voltage(dac, (ch * 2) + 1, 1);
     }
     DAC_update(dac);
     return;
   }
   DAC_set_voltage(dac, 3, ((float)self->last_note[0]) / 12.0);
   DAC_set_voltage(dac, 2, adsr[0]->level * 4.0);
+  DAC_set_voltage(dac, 1, ((float)self->last_note[1]) / 12.0);
+  DAC_set_voltage(dac, 0, adsr[1]->level * 4.0);
   DAC_update(dac);
 }
 
