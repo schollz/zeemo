@@ -66,24 +66,30 @@ void Zeemo_init(Zeemo *self) {
   SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 6);
   SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 9);
   SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 7);
-  SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 7);
-  SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 8);
-  SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 3);
-  SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 6);
+  // SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 7);
+  // SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 8);
+  // SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 3);
+  // SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 6);
   // durations
-  SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_DUR], 10);
+  SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_DUR], 12);
 
   // voice 1 notes
   SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 4);
-  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 4);
-  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 4);
-  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
-  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 4);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 12);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 13);
   SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 8);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 6);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 12);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 14);
   SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 4);
-  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 6);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 13);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 4);
   // durations
   SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_DUR], 14);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_DUR], 13);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_DUR], 12);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_DUR], 9);
 
   // voice 2 notes
   SimpleSequence_add(&self->seq[VIEW_VOICE_2][NOTE_VAL], 4);
@@ -110,10 +116,23 @@ void Zeemo_init(Zeemo *self) {
   SimpleSequence_add(&self->seq[VIEW_VOICE_3][NOTE_VAL], 13);
   // durations
   SimpleSequence_add(&self->seq[VIEW_VOICE_3][NOTE_DUR], 15);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_3][NOTE_DUR], 12);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_3][NOTE_DUR], 16);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_3][NOTE_DUR], 17);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_3][NOTE_DUR], 13);
+
+  // voice 1 notes
+  SimpleSequence_add(&self->seq[VIEW_VOICE_4][NOTE_VAL], 4);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_4][NOTE_VAL], 11);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_4][NOTE_VAL], 8);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_4][NOTE_VAL], 11);
+  // durations
+  SimpleSequence_add(&self->seq[VIEW_VOICE_4][NOTE_DUR], 14);
 
   SimpleSequence_reset(&self->seq[VIEW_VOICE_1][NOTE_VAL]);
   SimpleSequence_reset(&self->seq[VIEW_VOICE_2][NOTE_VAL]);
   SimpleSequence_reset(&self->seq[VIEW_VOICE_3][NOTE_VAL]);
+  SimpleSequence_reset(&self->seq[VIEW_VOICE_4][NOTE_VAL]);
   SimpleSequence_reset(&self->seq[VIEW_CHORD][NOTE_DUR]);
 }
 
@@ -152,6 +171,7 @@ void Zeemo_update(Zeemo *self) {
     return;
   }
   DAC_set_voltage(dac, 7, ((float)self->last_note[2]) / 12.0);
+  DAC_set_voltage(dac, 5, ((float)self->last_note[3]) / 12.0);
   DAC_set_voltage(dac, 3, ((float)self->last_note[0]) / 12.0);
   DAC_set_voltage(dac, 2, adsr[0]->level * 4.0);
   DAC_set_voltage(dac, 1, ((float)self->last_note[1]) / 12.0);
@@ -230,12 +250,12 @@ void Zeemo_tick(Zeemo *self, uint64_t total_ticks) {
       int8_t note = scale_major[note_index];
       note = note % 12;
       if (i == 0) {
-        note += 0;
+        note += 36;
       }
       if (i == 1) {
-        note += 12;
+        note += 24;
       }
-      if (i > 1) {
+      if (i == 2) {
         note += 36;
       }
       printf("[zeemo] voice %d, note on: %d (index: %d)\n", i, note,
