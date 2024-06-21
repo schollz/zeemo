@@ -38,9 +38,7 @@ void DAC_update(DAC *self) {
       }
     }
     if (mcp4728_changed[i]) {
-      for (int j = 0; j < 4; j++) {
-        MCP4728_update(self->mcp4728[i]);
-      }
+      MCP4728_update(self->mcp4728[i]);
     }
   }
   for (int i = 0; i < 8; i++) {
