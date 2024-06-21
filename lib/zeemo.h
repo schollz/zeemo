@@ -63,23 +63,27 @@ void Zeemo_init(Zeemo *self) {
 
   // chords
   SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 4);
+  SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 6);
   SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 9);
   SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 7);
+  SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 7);
   SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 8);
+  SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 3);
+  SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_VAL], 6);
   // durations
   SimpleSequence_add(&self->seq[VIEW_CHORD][NOTE_DUR], 10);
 
   // voice 1 notes
   SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 4);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 4);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 4);
   SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
-  // SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 6);
-  // SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
-  // SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 8);
-  // SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
-  // SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 6);
-  // SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 4);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 8);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 4);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_VAL], 11);
   // durations
-  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_DUR], 13);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_1][NOTE_DUR], 14);
 
   // voice 2 notes
   SimpleSequence_add(&self->seq[VIEW_VOICE_2][NOTE_VAL], 4);
@@ -93,8 +97,23 @@ void Zeemo_init(Zeemo *self) {
   // durations
   SimpleSequence_add(&self->seq[VIEW_VOICE_2][NOTE_DUR], 10);
 
+  // voice 3 notes
+  SimpleSequence_add(&self->seq[VIEW_VOICE_3][NOTE_VAL], 13);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_3][NOTE_VAL], 14);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_3][NOTE_VAL], 13);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_3][NOTE_VAL], 15);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_3][NOTE_VAL], 16);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_3][NOTE_VAL], 16);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_3][NOTE_VAL], 20);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_3][NOTE_VAL], 13);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_3][NOTE_VAL], 20);
+  SimpleSequence_add(&self->seq[VIEW_VOICE_3][NOTE_VAL], 13);
+  // durations
+  SimpleSequence_add(&self->seq[VIEW_VOICE_3][NOTE_DUR], 15);
+
   SimpleSequence_reset(&self->seq[VIEW_VOICE_1][NOTE_VAL]);
   SimpleSequence_reset(&self->seq[VIEW_VOICE_2][NOTE_VAL]);
+  SimpleSequence_reset(&self->seq[VIEW_VOICE_3][NOTE_VAL]);
   SimpleSequence_reset(&self->seq[VIEW_CHORD][NOTE_DUR]);
 }
 
@@ -125,13 +144,14 @@ void Zeemo_update(Zeemo *self) {
   if (self->mode_tuning) {
     for (uint8_t ch = 0; ch < 4; ch++) {
       // set to 2 volts
-      DAC_set_voltage(dac, (ch * 2), 1);
+      DAC_set_voltage(dac, (ch * 2), 4);
       // set to high (4 volts)
-      DAC_set_voltage(dac, (ch * 2) + 1, 1);
+      DAC_set_voltage(dac, (ch * 2) + 1, 4);
     }
     DAC_update(dac);
     return;
   }
+  DAC_set_voltage(dac, 7, ((float)self->last_note[2]) / 12.0);
   DAC_set_voltage(dac, 3, ((float)self->last_note[0]) / 12.0);
   DAC_set_voltage(dac, 2, adsr[0]->level * 4.0);
   DAC_set_voltage(dac, 1, ((float)self->last_note[1]) / 12.0);
@@ -202,10 +222,24 @@ void Zeemo_tick(Zeemo *self, uint64_t total_ticks) {
       printf("[zeemo] voice %d, note off: %d\n", i, self->last_note[i]);
       ADSR_gate(adsr[i], false, ct);
     } else {
-      int8_t note = scale_major[self->playing[VIEW_VOICE_1 + i][NOTE_VAL] - 4 +
-                                self->chord];
+      int8_t note_index =
+          self->playing[VIEW_VOICE_1 + i][NOTE_VAL] - 4 + self->chord;
+      if (self->playing[VIEW_VOICE_1 + i][NOTE_VAL] > 11) {
+        note_index = self->playing[VIEW_VOICE_1 + i][NOTE_VAL] - 12;
+      }
+      int8_t note = scale_major[note_index];
       note = note % 12;
-      printf("[zeemo] voice %d, note on: %d\n", i, note);
+      if (i == 0) {
+        note += 0;
+      }
+      if (i == 1) {
+        note += 12;
+      }
+      if (i > 1) {
+        note += 36;
+      }
+      printf("[zeemo] voice %d, note on: %d (index: %d)\n", i, note,
+             note_index);
       self->last_note[i] = note;
       ADSR_gate(adsr[i], true, ct);
     }

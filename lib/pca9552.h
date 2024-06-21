@@ -72,6 +72,7 @@ uint8_t PCA9552_writeReg(PCA9552 *pca, uint8_t reg, uint8_t value) {
     pca->error = PCA9552_OK;
   else
     pca->error = PCA9552_ERROR;
+  sleep_ms(1);
   return pca->error;
 }
 

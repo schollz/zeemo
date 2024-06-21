@@ -85,7 +85,12 @@ int main() {
 
   // setup adsrs
   for (uint8_t i = 0; i < 4; i++) {
-    adsr[i] = ADSR_malloc(500, 100, 1, 200, 2.7);
+    if (i == 0) {
+      adsr[i] = ADSR_malloc(1500, 100, 1, 2000, 2.7);
+
+    } else {
+      adsr[i] = ADSR_malloc(500, 100, 1, 200, 2.7);
+    }
   }
 
   // setup timer
